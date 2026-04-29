@@ -57,7 +57,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.1"
-<<<<<<< HEAD
   cross_file:
     dependency: transitive
     description:
@@ -66,8 +65,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.5+2"
-=======
->>>>>>> ae6a1c4e4bef7c9ead2600f83a447db4baa0ff8e
   crypto:
     dependency: transitive
     description:
@@ -108,7 +105,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.1"
-<<<<<<< HEAD
   file_selector_linux:
     dependency: transitive
     description:
@@ -141,8 +137,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.9.3+5"
-=======
->>>>>>> ae6a1c4e4bef7c9ead2600f83a447db4baa0ff8e
   flutter:
     dependency: "direct main"
     description: flutter
@@ -156,7 +150,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.2"
-<<<<<<< HEAD
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -165,21 +158,16 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.34"
-=======
->>>>>>> ae6a1c4e4bef7c9ead2600f83a447db4baa0ff8e
   flutter_test:
     dependency: "direct dev"
     description: flutter
     source: sdk
     version: "0.0.0"
-<<<<<<< HEAD
   flutter_web_plugins:
     dependency: transitive
     description: flutter
     source: sdk
     version: "0.0.0"
-=======
->>>>>>> ae6a1c4e4bef7c9ead2600f83a447db4baa0ff8e
   glob:
     dependency: transitive
     description:
@@ -220,7 +208,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.2"
-<<<<<<< HEAD
   image_picker:
     dependency: "direct main"
     description:
@@ -285,8 +272,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.2"
-=======
->>>>>>> ae6a1c4e4bef7c9ead2600f83a447db4baa0ff8e
   jni:
     dependency: transitive
     description:
@@ -367,7 +352,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.17.0"
-<<<<<<< HEAD
   mime:
     dependency: transitive
     description:
@@ -376,8 +360,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
-=======
->>>>>>> ae6a1c4e4bef7c9ead2600f83a447db4baa0ff8e
   native_toolchain_c:
     dependency: transitive
     description:
@@ -419,11 +401,7 @@ packages:
     source: hosted
     version: "1.9.1"
   path_provider:
-<<<<<<< HEAD
     dependency: "direct main"
-=======
-    dependency: transitive
->>>>>>> ae6a1c4e4bef7c9ead2600f83a447db4baa0ff8e
     description:
       name: path_provider
       sha256: "50c5dd5b6e1aaf6fb3a78b33f6aa3afca52bf903a8a5298f53101fdaee55bbcd"
