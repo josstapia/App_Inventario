@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 import 'package:flutter/material.dart';
 import 'package:app_inventario/services/database_helper.dart'; // Tu paquete local
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
@@ -14,23 +11,11 @@ void main() async {
 
 class PanaderiaApp extends StatelessWidget {
   const PanaderiaApp({super.key});
-=======
-import 'package:app_inventario/screens/inventario_screen.dart';
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-// Asegúrate que el nombre coincida
-
-void main() => runApp(const MyApp());
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
->>>>>>> ae6a1c4e4bef7c9ead2600f83a447db4baa0ff8e
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-<<<<<<< HEAD
       title: 'APP INVENTARIO', // Título interno de la aplicación
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -132,7 +117,7 @@ class _InventarioMasterState extends State<InventarioMaster> {
                 children: const [
                   Icon(Icons.table_chart, color: Colors.black54),
                   Text(
-                    'DataBase', // Salto de línea para que no sea muy ancho
+                    'DataBase',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         color: Colors.black87,
@@ -312,7 +297,7 @@ class DatabaseViewScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Visor Técnico SQLite')),
+      appBar: AppBar(title: const Text('Datos de SQLite')),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: DatabaseHelper.instance.obtenerRaw(),
         builder: (context, snapshot) {
@@ -341,15 +326,6 @@ class DatabaseViewScreen extends StatelessWidget {
           );
         },
       ),
-=======
-      title: 'Panadería Stock',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
-        textTheme: GoogleFonts.poppinsTextTheme(),
-      ),
-      home: const InventarioScreen(), // <--- Cargamos la pantalla de Xavier
->>>>>>> ae6a1c4e4bef7c9ead2600f83a447db4baa0ff8e
     );
   }
 }
