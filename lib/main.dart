@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import 'package:flutter/material.dart';
 import 'package:app_inventario/services/database_helper.dart'; // Tu paquete local
 import 'package:image_picker/image_picker.dart';
@@ -13,11 +14,23 @@ void main() async {
 
 class PanaderiaApp extends StatelessWidget {
   const PanaderiaApp({super.key});
+=======
+import 'package:app_inventario/screens/inventario_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+// Asegúrate que el nombre coincida
+
+void main() => runApp(const MyApp());
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+>>>>>>> ae6a1c4e4bef7c9ead2600f83a447db4baa0ff8e
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+<<<<<<< HEAD
       title: 'APP INVENTARIO', // Título interno de la aplicación
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -328,6 +341,15 @@ class DatabaseViewScreen extends StatelessWidget {
           );
         },
       ),
+=======
+      title: 'Panadería Stock',
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
+        textTheme: GoogleFonts.poppinsTextTheme(),
+      ),
+      home: const InventarioScreen(), // <--- Cargamos la pantalla de Xavier
+>>>>>>> ae6a1c4e4bef7c9ead2600f83a447db4baa0ff8e
     );
   }
 }
