@@ -9,7 +9,7 @@
 
 ## 📱 Vista Previa del Diseño
 
-|     Inicio       | Lista de Productos | Alerta de Stock Bajo | Gestión de Categorías |
+|     Inicio       | Lista de Productos | Alerta de Stock Bajo | Gestión de Configuración |
 | :---: | :---: | :---: |:---: |
 | <img src="assets/inicio.jpg" width="200"> | <img src="assets/lista.jpg" width="200"> | <img src="assets/alerta.jpg" width="200"> | <img src="assets/configuracion.jpg" width="200"> |
 
