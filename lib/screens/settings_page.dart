@@ -38,15 +38,26 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  // FUNCIÓN PARA GUARDAR DATOS
+ // FUNCIÓN PARA GUARDAR DATOS Y REGRESAR
   Future<void> _guardarConfiguracion() async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // Guardamos los valores de los controladores
-      bool nombreOk =
-          await prefs.setString('nombre_negocio', _nombreLocalCtrl.text.trim());
-      bool alertasOk = await prefs.setBool('alertas_stock', _alertasActivas);
+      // Guardamos los valores
+      await prefs.setString('nombre_negocio', _nombreLocalCtrl.text.trim());
+      await prefs.setBool('alertas_stock', _alertasActivas);
+      await prefs.setStringList('lista_categorias', _categorias);
+
+      // Notificamos al usuario
+      _notificar("Configuración guardada correctamente");
+
+      // REGRESAR A LA PANTALLA ANTERIOR (Main)
+      // Usamos un pequeño delay para que el usuario alcance a ver el SnackBar
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      });
     } catch (e) {
       _notificar("Error al guardar: $e", esError: true);
     }
