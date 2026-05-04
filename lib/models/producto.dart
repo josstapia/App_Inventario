@@ -1,43 +1,40 @@
-class Producto {
-  final String id;
-  final String nombre;
-  final int cantidad;
-  final double precio;
-  final String? categoria; // Nuevo campo para el Dropdown
-  final String? imagen; // Nuevo campo para la ruta de la foto
+class Product {
+  final int? id;
+  final String name;
+  int stock;
+  final double price;
+  final String category;
+  final String? imagePath; // HU03: Soporte para imagen
 
-  Producto({
-    required this.id,
-    required this.nombre,
-    required this.cantidad,
-    required this.precio,
-    this.categoria,
-    this.imagen,
+  Product({
+    this.id,
+    required this.name,
+    required this.stock,
+    required this.price,
+    required this.category,
+    this.imagePath,
   });
 
-  // Este método transforma lo que devuelve SQLite (Map) en un objeto Producto
-  factory Producto.fromMap(Map<String, dynamic> map) {
-    return Producto(
-      id: map['id'].toString(),
-      nombre: map['nombre'] ?? 'Sin nombre',
-      cantidad: map['cantidad'] ?? 0,
-      precio: (map['precio'] is int)
-          ? (map['precio'] as int).toDouble()
-          : (map['precio'] ?? 0.0),
-      categoria: map['categoria'] ?? 'General',
-      imagen: map['imagen'], // Puede ser null si no hay foto
-    );
-  }
-
-  // Método útil si necesitas convertir el objeto de vuelta a un Mapa
+  // HU05: Conversión para persistencia local en SQLite
   Map<String, dynamic> toMap() {
     return {
-      'id': int.tryParse(id),
-      'nombre': nombre,
-      'cantidad': cantidad,
-      'precio': precio,
-      'categoria': categoria,
-      'imagen': imagen,
+      'id': id,
+      'name': name,
+      'stock': stock,
+      'price': price,
+      'category': category,
+      'imagePath': imagePath,
     };
+  }
+
+  factory Product.fromMap(Map<String, dynamic> map) {
+    return Product(
+      id: map['id'],
+      name: map['name'],
+      stock: map['stock'],
+      price: map['price'],
+      category: map['category'],
+      imagePath: map['imagePath'],
+    );
   }
 }

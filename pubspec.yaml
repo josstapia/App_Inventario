@@ -13,6 +13,8 @@ dependencies:
 
   # Iconos modernos de iOS
   cupertino_icons: ^1.0.6
+  flutter_riverpod: ^2.4.9
+  shared_preferences: ^2.2.2
   
   # Gestión de estado (Para que los datos se actualicen en todas las pantallas)
   provider: ^6.1.1
@@ -30,14 +32,16 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  
+    
+   
   # Reglas de código limpio
   flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
 
-  # Si Xavier decide usar imágenes propias (ej: logo de la panadería), 
-  # deberá descomentar estas líneas:
-  # assets:
-  #   - assets/images/
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon.png" #

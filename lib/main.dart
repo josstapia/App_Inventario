@@ -1,10 +1,16 @@
-import 'package:flutter/material.dart';
-import 'package:app_inventario/services/database_helper.dart'; // Tu paquete local
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:app_inventario/screens/settings_page.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'models/producto.dart';
+import 'services/database_helper.dart';
 
+String _nombreLocal = "APP INVENTARIO";
+bool _mostrarAlertas = true; // Variable global en el estado
+
+final _nombreCtrl = TextEditingController();
 void main() async {
-  // Inicialización necesaria para asegurar que SQLite esté listo antes de arrancar
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const PanaderiaApp());
 }
@@ -16,11 +22,23 @@ class PanaderiaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'APP INVENTARIO', // Título interno de la aplicación
+      title: 'INVENTARIO',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color.fromARGB(255, 90, 230, 223)),
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF000000),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF5AE6DF),
+          secondary: Color(0xFFE67E22),
+          surface: Color(0xFF121212),
+        ),
         useMaterial3: true,
+        inputDecorationTheme: const InputDecorationTheme(
+          filled: true,
+          fillColor: Color(0xFF121212),
+          border:
+              OutlineInputBorder(borderSide: BorderSide(color: Colors.white10)),
+          labelStyle: TextStyle(color: Colors.grey),
+        ),
       ),
       home: const InventarioMaster(),
     );
@@ -35,12 +53,15 @@ class InventarioMaster extends StatefulWidget {
 }
 
 class _InventarioMasterState extends State<InventarioMaster> {
-  // Controladores de texto
+  // Controladores de formulario
   final _nombreCtrl = TextEditingController();
   final _cantidadCtrl = TextEditingController();
   final _precioCtrl = TextEditingController();
 
-  // Variables de estado para edición e imagen
+  // Controlador de búsqueda
+  final _searchCtrl = TextEditingController();
+  String _filtroBusqueda = "";
+
   String? _imagePath;
   int? _editingId;
   String _categoriaSeleccionada = 'Salado';
@@ -52,13 +73,88 @@ class _InventarioMasterState extends State<InventarioMaster> {
     'Otro'
   ];
 
-  // Función para seleccionar imagen desde la galería
+  // --- LÓGICA DE NEGOCIO ---
+
   Future<void> _seleccionarImagen() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() => _imagePath = pickedFile.path);
     }
+  }
+
+  List<String> _categoriasApp = [
+    'Salado',
+    'Dulce',
+    'Pastelería',
+    'Bebida',
+    'Otro'
+  ];
+  Future<void> _cargarPreferencias() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _nombreLocal = prefs.getString('nombre_negocio') ?? "APP INVENTARIO";
+      _mostrarAlertas = prefs.getBool('alertas_stock') ?? true;
+
+      // CARGAR CATEGORÍAS DINÁMICAS
+      _categoriasApp = prefs.getStringList('lista_categorias') ??
+          ['Salado', 'Dulce', 'Pastelería', 'Bebida', 'Otro'];
+
+      // Validar que la categoría seleccionada aún exista en la lista
+      if (!_categoriasApp.contains(_categoriaSeleccionada)) {
+        _categoriaSeleccionada = _categoriasApp.first;
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarPreferencias(); // Carga el nombre al iniciar la app
+  }
+
+  Future<void> _procesarDatos() async {
+    if (_nombreCtrl.text.trim().isEmpty) {
+      _notificar("El nombre es obligatorio", esError: true);
+      return;
+    }
+
+    final int? cant = int.tryParse(_cantidadCtrl.text);
+    if (cant == null || cant < 0) {
+      _notificar("Stock debe ser un número positivo", esError: true);
+      return;
+    }
+    final double? precio = double.tryParse(_precioCtrl.text);
+    if (precio == null || precio <= 0) {
+      _notificar("El precio debe ser mayor a 0", esError: true);
+      return;
+    }
+
+    final producto = Product(
+      id: _editingId,
+      name: _nombreCtrl.text,
+      stock: cant,
+      price: double.tryParse(_precioCtrl.text) ?? 0.0,
+      category: _categoriaSeleccionada,
+      imagePath: _imagePath,
+    );
+
+    await DbHelper.instance.upsert(producto);
+    _notificar(
+        _editingId == null ? "Registrado con éxito" : "Actualizado con éxito");
+    _limpiarFormulario();
+    setState(() {});
+  }
+
+  void _notificar(String msg, {bool esError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor:
+            esError ? Colors.redAccent : const Color.fromARGB(255, 46, 214, 12),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _limpiarFormulario() {
@@ -72,78 +168,127 @@ class _InventarioMasterState extends State<InventarioMaster> {
     });
   }
 
-  // Lógica para Guardar o Actualizar en la base de datos
-  Future<void> _procesarDatos() async {
-    if (_nombreCtrl.text.isEmpty || _cantidadCtrl.text.isEmpty) return;
-
-    final datos = {
-      'nombre': _nombreCtrl.text,
-      'cantidad': int.parse(_cantidadCtrl.text),
-      'precio': double.tryParse(_precioCtrl.text) ?? 0.0,
-      'categoria': _categoriaSeleccionada,
-      'imagen': _imagePath,
-    };
-
-    if (_editingId == null) {
-      await DatabaseHelper.instance.insertar(datos);
-    } else {
-      datos['id'] = _editingId;
-      await DatabaseHelper.instance.actualizar(datos);
-    }
-
-    _limpiarFormulario();
-    setState(() {}); // Refresca la lista de productos
-  }
+  // --- COMPONENTES DE INTERFAZ ---
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('APP INVENTARIO',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(_nombreLocal,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, letterSpacing: 1.2)),
         centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 90, 230, 223),
+        backgroundColor: Colors.transparent,
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(
-                right: 10, top: 5), // Espaciado para que no pegue al borde
-            child: InkWell(
-              onTap: () => Navigator.push(
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.grey),
+            onPressed: () async {
+              await Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const DatabaseViewScreen())),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.table_chart, color: Colors.black54),
-                  Text(
-                    'DataBase',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: Colors.black87,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
+                      builder: (context) => const SettingsPage()));
+              _cargarPreferencias(); // ¡Esta línea es vital para que la lista cambie de color!
+            },
           ),
         ],
+        elevation: 0,
       ),
       body: Column(
         children: [
+          _buildSearchBar(), // Nueva barra de búsqueda
+          _buildDashboard(),
           _buildFormulario(),
-          const Divider(thickness: 2),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+            child: Divider(color: Colors.white10, thickness: 1),
+          ),
           Expanded(child: _buildLista()),
         ],
       ),
     );
   }
 
-  // Widget que construye el formulario de entrada
+  // Widget de búsqueda (HU mejorada)
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: TextField(
+        controller: _searchCtrl,
+        onChanged: (value) =>
+            setState(() => _filtroBusqueda = value.toLowerCase()),
+        decoration: InputDecoration(
+          hintText: 'Buscar pan o categoría...',
+          prefixIcon: const Icon(Icons.search, color: Color(0xFF5AE6DF)),
+          suffixIcon: _filtroBusqueda.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, size: 20),
+                  onPressed: () {
+                    _searchCtrl.clear();
+                    setState(() => _filtroBusqueda = "");
+                  },
+                )
+              : null,
+          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: Colors.white10),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: Color(0xFF5AE6DF)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDashboard() {
+    return FutureBuilder<List<Product>>(
+      future: DbHelper.instance.getAll(),
+      builder: (context, snapshot) {
+        final productos = snapshot.data ?? [];
+        double valorTotal =
+            productos.fold(0, (sum, p) => sum + (p.price * p.stock));
+
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            color: const Color(0xFF121212),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _statItem("PRODUCTOS", productos.length.toString()),
+              Container(width: 1, height: 30, color: Colors.white10),
+              _statItem("VALOR STOCK", "\$${valorTotal.toStringAsFixed(2)}"),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _statItem(String label, String value) {
+    return Column(
+      children: [
+        Text(label,
+            style: const TextStyle(
+                color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+        Text(value,
+            style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF21E408))),
+      ],
+    );
+  }
+
   Widget _buildFormulario() {
     return Padding(
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
         children: [
           Row(
@@ -151,29 +296,31 @@ class _InventarioMasterState extends State<InventarioMaster> {
               GestureDetector(
                 onTap: _seleccionarImagen,
                 child: Container(
-                  width: 70,
-                  height: 70,
+                  width: 65,
+                  height: 65,
                   decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                          color: const Color.fromARGB(255, 90, 230, 223))),
+                    color: const Color(0xFF121212),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFF5AE6DF)),
+                  ),
                   child: _imagePath == null
-                      ? const Icon(Icons.add_a_photo,
-                          color: Color.fromARGB(255, 0, 0, 0))
+                      ? const Icon(Icons.add_a_photo_outlined,
+                          color: Colors.grey, size: 20)
                       : ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(11),
                           child:
                               Image.file(File(_imagePath!), fit: BoxFit.cover),
                         ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: TextField(
-                    controller: _nombreCtrl,
-                    decoration: const InputDecoration(
-                        labelText: 'Nombre del producto')),
+                  controller: _nombreCtrl,
+                  decoration: const InputDecoration(
+                      labelText: 'Nombre',
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12)),
+                ),
               ),
             ],
           ),
@@ -184,25 +331,20 @@ class _InventarioMasterState extends State<InventarioMaster> {
                   child: TextField(
                       controller: _cantidadCtrl,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Cant.'))),
-              const SizedBox(width: 10),
+                      decoration: const InputDecoration(labelText: 'Stock'))),
+              const SizedBox(width: 8),
               Expanded(
                   child: TextField(
-                controller: _precioCtrl,
-                keyboardType: TextInputType.number,
-                decoration:
-                    const InputDecoration(labelText: 'Precio \nUnitario'),
-                textAlign: TextAlign.center,
-              )),
-              const SizedBox(width: 10),
+                      controller: _precioCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Precio'))),
+              const SizedBox(width: 8),
               Expanded(
                 flex: 2,
                 child: DropdownButtonFormField<String>(
                   value: _categoriaSeleccionada,
-                  decoration: const InputDecoration(labelText: 'Categoría'),
-                  items: _categorias
-                      .map((String cat) =>
-                          DropdownMenuItem(value: cat, child: Text(cat)))
+                  items: _categoriasApp
+                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                       .toList(),
                   onChanged: (val) =>
                       setState(() => _categoriaSeleccionada = val!),
@@ -210,76 +352,217 @@ class _InventarioMasterState extends State<InventarioMaster> {
               ),
             ],
           ),
-          const SizedBox(height: 15),
-          ElevatedButton.icon(
+          const SizedBox(height: 12),
+          ElevatedButton(
             onPressed: _procesarDatos,
-            icon: Icon(_editingId == null ? Icons.add : Icons.save),
-            label: Text(_editingId == null
-                ? 'Agregar al Inventario'
-                : 'Guardar Cambios'),
             style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 45),
-                backgroundColor: const Color.fromARGB(255, 90, 230, 223),
-                foregroundColor: Colors.white),
+              backgroundColor: const Color(0xFFE67E22),
+              foregroundColor: Colors.white,
+              minimumSize: const Size(double.infinity, 45),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text(_editingId == null ? 'REGISTRAR' : 'GUARDAR CAMBIOS'),
           ),
           if (_editingId != null)
             TextButton(
                 onPressed: _limpiarFormulario,
-                child: const Text('Cancelar Edición')),
+                child: const Text("Cancelar edición",
+                    style: TextStyle(color: Colors.redAccent, fontSize: 12))),
         ],
       ),
     );
   }
 
-  // Widget que construye la lista de productos registrados
   Widget _buildLista() {
-    return FutureBuilder<List<Producto>>(
-      future: DatabaseHelper.instance.obtenerTodos(),
+    return FutureBuilder<List<Product>>(
+      future: DbHelper.instance.getAll(),
       builder: (context, snapshot) {
         if (!snapshot.hasData)
           return const Center(child: CircularProgressIndicator());
-        final productos = snapshot.data!;
-        if (productos.isEmpty)
-          return const Center(child: Text("No hay productos registrados"));
+
+        // --- FILTRO DE BÚSQUEDA ---
+        final productos = snapshot.data!.where((p) {
+          return p.name.toLowerCase().contains(_filtroBusqueda) ||
+              p.category.toLowerCase().contains(_filtroBusqueda);
+        }).toList();
+
+        if (productos.isEmpty) {
+          return const Center(
+              child: Text("No se encontraron resultados",
+                  style: TextStyle(color: Colors.grey)));
+        }
 
         return ListView.builder(
           itemCount: productos.length,
           itemBuilder: (context, i) {
             final p = productos[i];
-            return ListTile(
-              leading: (p.imagen != null && p.imagen!.isNotEmpty)
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: Image.file(File(p.imagen!),
-                          width: 50, height: 50, fit: BoxFit.cover),
-                    )
-                  : const Icon(Icons.inventory_2,
-                      size: 40, color: Colors.orange),
-              title: Text(p.nombre,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle:
-                  Text("${p.categoria} | Stock: ${p.cantidad} | \$${p.precio}"),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
+            final bool bajoStock = _mostrarAlertas && p.stock < 5;
+
+            // ... dentro de tu itemBuilder
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              height: 140, // Un poco más de aire para seguridad
+              decoration: BoxDecoration(
+                color: const Color(0xFF0A0A0A),
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(
+                    color: bajoStock
+                        ? Colors.redAccent
+                        : const Color(0xFF5AE6DF).withOpacity(0.3),
+                    width: bajoStock ? 2.5 : 0.5),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.blue),
-                      onPressed: () {
-                        setState(() {
-                          _editingId = int.parse(p.id);
-                          _nombreCtrl.text = p.nombre;
-                          _cantidadCtrl.text = p.cantidad.toString();
-                          _precioCtrl.text = p.precio.toString();
-                          _imagePath = p.imagen;
-                          _categoriaSeleccionada = p.categoria ?? 'Salado';
-                        });
-                      }),
-                  IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () async {
-                        await DatabaseHelper.instance.eliminar(int.parse(p.id));
-                        setState(() {});
-                      }),
+                  // 1. IMAGEN
+                  p.imagePath != null
+                      ? CircleAvatar(
+                          radius: 30,
+                          backgroundImage: FileImage(File(p.imagePath!)))
+                      : const CircleAvatar(
+                          radius: 30, child: Icon(Icons.bakery_dining)),
+
+                  const SizedBox(width: 12),
+
+                  // 2. INFORMACIÓN
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(p.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.white)),
+                        const SizedBox(height: 4),
+                        Text("Stock: ${p.stock}",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: bajoStock
+                                    ? Colors.redAccent
+                                    : Colors.grey)),
+                        if (bajoStock) ...[
+                          const SizedBox(width: 6),
+                          const Icon(Icons.warning_amber_rounded,
+                              color: Colors.redAccent, size: 26),
+                        ],
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                              color: Colors.white10,
+                              borderRadius: BorderRadius.circular(4)),
+                          child: Text(p.category.toUpperCase(),
+                              style: const TextStyle(
+                                  color: Colors.greenAccent,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // 3. PRECIO
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      "\$${p.price.toStringAsFixed(2)}",
+                      style: const TextStyle(
+                          color: Color(0xFF21E408),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18),
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  // 4. SECCIÓN DE ACCIONES
+                  // Usamos Expanded para que la columna respete el alto del Container
+
+                  SizedBox(
+                    width: 100, // Ancho fijo para la zona de botones
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // BOTONES SUPERIORES
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _editingId = p.id;
+                                    _nombreCtrl.text = p.name;
+                                    _cantidadCtrl.text = p.stock.toString();
+                                    _precioCtrl.text = p.price.toString();
+                                    _imagePath = p.imagePath;
+                                    _categoriaSeleccionada = p.category;
+                                  });
+                                },
+                                child: const Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.edit_note,
+                                        color: Color(0xFF5AE6DF), size: 30),
+                                    Text("Editar",
+                                        style: TextStyle(
+                                            color: Color(0xFF5AE6DF),
+                                            fontSize: 10)),
+                                  ],
+                                )),
+                            const SizedBox(width: 20),
+                            GestureDetector(
+                              onTap: () => _confirmarBorrado(p),
+                              child: const Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.delete_outline,
+                                      color: Colors.redAccent, size: 30),
+                                  Text("Eliminar",
+                                      style: TextStyle(
+                                          color: Colors.redAccent,
+                                          fontSize: 10)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // BOTONES INFERIORES (+ y -)
+                        // Agregamos un FittedBox para que si el contenido es muy grande, se encoja en lugar de desbordar
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: () => p.stock > 0
+                                    ? _actualizarStockRapido(p, p.stock - 1)
+                                    : null,
+                                child: const Icon(Icons.remove_circle_outline,
+                                    color: Colors.grey, size: 36),
+                              ),
+                              const SizedBox(width: 20),
+                              GestureDetector(
+                                onTap: () =>
+                                    _actualizarStockRapido(p, p.stock + 1),
+                                child: const Icon(Icons.add_circle_outline,
+                                    color: Color(0xFF5AE6DF), size: 36),
+                              ),
+                              const SizedBox(width: 0),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             );
@@ -288,44 +571,39 @@ class _InventarioMasterState extends State<InventarioMaster> {
       },
     );
   }
-}
 
-// Pantalla para visualizar los datos técnicos (Raw)
-class DatabaseViewScreen extends StatelessWidget {
-  const DatabaseViewScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Datos de SQLite')),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: DatabaseHelper.instance.obtenerRaw(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData)
-            return const Center(child: CircularProgressIndicator());
-          final data = snapshot.data!;
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              columns: const [
-                DataColumn(label: Text('ID')),
-                DataColumn(label: Text('Nombre')),
-                DataColumn(label: Text('Categoría')),
-                DataColumn(label: Text('Imagen')),
-              ],
-              rows: data
-                  .map((row) => DataRow(cells: [
-                        DataCell(Text(row['id'].toString())),
-                        DataCell(Text(row['nombre'].toString())),
-                        DataCell(Text(row['categoria'].toString())),
-                        DataCell(
-                            Text(row['imagen']?.split('/').last ?? 'Sin foto')),
-                      ]))
-                  .toList(),
-            ),
-          );
-        },
+  void _confirmarBorrado(Product p) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF121212),
+        title: const Text("Eliminar"),
+        content: Text("¿Quitar '${p.name}' del inventario?"),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context), child: const Text("NO")),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () async {
+              await DbHelper.instance.delete(p.id!);
+              Navigator.pop(context);
+              setState(() {});
+              _notificar("Producto '${p.name}' eliminado", esError: true);
+            },
+            child:
+                const Text("ELIMINAR", style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
+  }
+
+  void _actualizarStockRapido(Product producto, int nuevoStock) async {
+    setState(() {
+      producto.stock = nuevoStock;
+    });
+
+    // Usamos 'instance.upsert' que es el método que ya tienes definido
+    await DbHelper.instance.upsert(producto);
   }
 }
