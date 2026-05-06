@@ -9,9 +9,9 @@
 
 ## 📱 Vista Previa del Diseño
 
-|     Inicio       | Lista de Productos | Alerta de Stock Bajo | Gestión de Configuración |
+|     Inicio       | Registro | Editar | Gestión de Configuración |
 | :---: | :---: | :---: |:---: |
-| <img src="assets/inicio.jpg" width="200"> | <img src="assets/lista.jpg" width="200"> | <img src="assets/alerta.jpg" width="200"> | <img src="assets/configuracion.jpg" width="200"> |
+| <img src="assets/inicio_1.jpeg" width="200"> | <img src="assets/registro_1.jpeg" width="200"> | <img src="assets/editar_1.jpeg" width="200"> | <img src="assets/configuracion.jpg" width="200"> |
 
 > **Nota:** Las interfaces han sido diseñadas siguiendo las 10 heurísticas de Nielsen y la teoría de carga cognitiva de Sweller para optimizar la eficiencia operativa.
 
@@ -47,6 +47,7 @@ Para mantener el código limpio y escalable, utilizamos la siguiente jerarquía:
 * `lib/models/`: Definición de clases de datos (ej: `Producto.dart`).
 * `lib/screens/`: Pantallas principales (Inventario, Registro, Detalles).
 * `lib/services/`: Lógica de la base de datos SQLite y `DatabaseHelper`.
+* `lib/widgets/`: Widgets reutilizables de UI (ej: `ProductCard`). *(Semana 2)*
 
 ---
 
@@ -58,3 +59,49 @@ Primero, clona el repositorio y descarga los paquetes necesarios:
 git clone [https://github.com/tu-usuario/app_inventario.git](https://github.com/josstapia/App_Inventario.git)
 cd app_inventario
 flutter pub get
+```
+
+---
+
+## 📅 Avance por Semanas
+
+### ✅ Semana 1 — Exploración + Inicialización
+- Definición de requisitos y arquitectura del proyecto.
+- Configuración del entorno Flutter y dependencias.
+- Prototipo inicial de pantallas.
+- **Entregable:** Requisitos + arquitectura base.
+
+---
+
+### ✅ Semana 2 — Producción I (Core Funcional)
+
+#### 🔧 Arquitecto / Líder Técnico
+- Implementación de `DatabaseHelper` con SQLite (`sqflite`).
+- Métodos CRUD: `upsert()`, `getAll()`, `delete()`.
+- Modelo `Product` con soporte para imagen (`imagePath`).
+
+#### 🎨 Developer UI / Frontend
+Se construyeron 3 archivos nuevos de interfaz, conectados a la capa de datos de José:
+
+**`lib/widgets/product_card.dart`**
+- Widget reutilizable para mostrar cada producto en la lista.
+- Colores e íconos únicos por categoría (Dulce, Salado, Pastelería, Bebida).
+- Indicador visual de stock bajo (borde rojo cuando stock < 5).
+- Botones `+` y `−` integrados para ajuste rápido de stock.
+
+**`lib/screens/inventario_screen.dart`**
+- Pantalla principal con `ListView` conectada a `DbHelper.instance.getAll()`.
+- Dashboard con total de productos, valor de stock y contador de alertas.
+- Barra de búsqueda en tiempo real por nombre o categoría.
+- Estado vacío con mensaje cuando no hay productos registrados.
+
+**`lib/screens/add_product_screen.dart`**
+- Formulario de registro y edición como pantalla independiente.
+- Validaciones: nombre obligatorio, stock no negativo, precio mayor a 0.
+- Selector de imagen desde galería.
+- Funciona tanto para crear nuevos productos como para editar existentes (recibe `Product?` opcional).
+- Guarda usando `DbHelper.instance.upsert()` de José.
+
+#### 🔍 Analista de Producto / QA
+- Prueba de persistencia: verificar que al cerrar la app y volver a entrar, los datos sigan guardados en SQLite.
+- Preparación del documento de avance para Moodle con capturas de pantalla del registro.
