@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/producto.dart';
 import 'services/database_helper.dart';
+import 'package:app_inventario/screens/inventario_screen.dart';
 
 String _nombreLocal = "APP INVENTARIO";
 bool _mostrarAlertas = true; // Variable global en el estado
@@ -40,7 +41,7 @@ class PanaderiaApp extends StatelessWidget {
           labelStyle: TextStyle(color: Colors.grey),
         ),
       ),
-      home: const InventarioMaster(),
+      home: const InventarioScreen(),
     );
   }
 }
