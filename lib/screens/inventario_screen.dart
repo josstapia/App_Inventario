@@ -4,6 +4,7 @@ import 'package:app_inventario/services/database_helper.dart';
 import 'package:app_inventario/widgets/product_card.dart';
 import 'package:app_inventario/screens/add_product_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:app_inventario/screens/settings_page.dart';
 
 class InventarioScreen extends StatefulWidget {
   const InventarioScreen({super.key});
@@ -104,7 +105,10 @@ class _InventarioScreenState extends State<InventarioScreen> {
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.grey),
             onPressed: () async {
-              await Navigator.pushNamed(context, '/settings');
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const SettingsPage()));
               _cargarPreferencias();
             },
           ),
