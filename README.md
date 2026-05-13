@@ -105,3 +105,28 @@ Se construyeron 3 archivos nuevos de interfaz, conectados a la capa de datos de 
 #### 🔍 Analista de Producto / QA
 - Prueba de persistencia: verificar que al cerrar la app y volver a entrar, los datos sigan guardados en SQLite.
 - Preparación del documento de avance para Moodle con capturas de pantalla del registro.
+
+---
+
+### ✅ Semana 3 — Producción II + Estabilización
+
+#### 🎨 
+Se implementó el sistema de navegación con GoRouter y se mejoró el feedback visual:
+
+**`lib/router/app_router.dart`** *(archivo nuevo)*
+- Enrutador central con GoRouter.
+- Rutas nombradas: `/` (inventario), `/agregar` (registro/edición), `/configuracion`.
+- Paso de parámetros con `extra` para modo edición.
+
+**`main.dart`**
+- Migración de `MaterialApp` a `MaterialApp.router` con `routerConfig: appRouter`.
+
+**`lib/screens/inventario_screen.dart`**
+- Navegación migrada a `context.push()` en los 3 puntos de navegación.
+- Diálogo de confirmación mejorado al eliminar: ícono rojo, texto centrado, botones estilizados y `barrierDismissible: false`.
+- SnackBar mejorado al eliminar: ícono, forma redondeada y duración de 3 segundos.
+
+**`lib/screens/add_product_screen.dart`**
+- Navegación migrada a `context.pop()` en botón cancelar, botón guardar y flecha de retroceso.
+
+**Entregable Semana 3:** Navegación con GoRouter + diálogos de confirmación + SnackBar de feedback visual.
