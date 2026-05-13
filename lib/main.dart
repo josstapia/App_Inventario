@@ -6,9 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'models/producto.dart';
 import 'services/database_helper.dart';
 import 'package:app_inventario/screens/inventario_screen.dart';
+import 'package:app_inventario/router/app_router.dart'; // ← semana 3 XG
 
 String _nombreLocal = "APP INVENTARIO";
-bool _mostrarAlertas = true; // Variable global en el estado
+bool _mostrarAlertas = true; // Variable global en el estado XG
 
 final _nombreCtrl = TextEditingController();
 void main() async {
@@ -21,9 +22,10 @@ class PanaderiaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(          // ← cambiamos MaterialApp por MaterialApp.router  Semana3 XG
       debugShowCheckedModeBanner: false,
       title: 'INVENTARIO',
+      routerConfig: appRouter,          // ← agregamos esta línea XG
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF000000),
@@ -41,7 +43,7 @@ class PanaderiaApp extends StatelessWidget {
           labelStyle: TextStyle(color: Colors.grey),
         ),
       ),
-      home: const InventarioScreen(),
+      // home: const InventarioScreen(),  // ← esta línea se comenta porque ahora la ruta inicial la maneja GoRouter XG
     );
   }
 }

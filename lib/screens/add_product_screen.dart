@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app_inventario/models/producto.dart';
 import 'package:app_inventario/services/database_helper.dart';
+import 'package:go_router/go_router.dart';  //update semana 3 XG
 
 class AddProductScreen extends StatefulWidget {
   final Product? producto; // Si viene con producto, es edición
@@ -86,7 +87,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
           behavior: SnackBarBehavior.floating,
         ),
       );
-      Navigator.pop(context);
+      context.pop(); // ← usamos context.pop() en lugar de Navigator.pop() para mantener la consistencia con GoRouter XG
     }
   }
 
@@ -104,7 +105,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.grey),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(), // ← usamos context.pop() en lugar de Navigator.pop() para mantener la consistencia con GoRouter XG
         ),
       ),
       body: SingleChildScrollView(
@@ -236,7 +237,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => context.pop(), // ← usamos context.pop() en lugar de Navigator.pop() para mantener la consistencia con GoRouter XG
                     child: const Text('Cancelar',
                         style: TextStyle(color: Colors.grey)),
                   ),

@@ -5,6 +5,7 @@ import 'package:app_inventario/widgets/product_card.dart';
 import 'package:app_inventario/screens/add_product_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app_inventario/screens/settings_page.dart';
+import 'package:go_router/go_router.dart';
 
 class InventarioScreen extends StatefulWidget {
   const InventarioScreen({super.key});
@@ -45,32 +46,69 @@ class _InventarioScreenState extends State<InventarioScreen> {
     );
   }
 
-  Future<void> _confirmarBorrado(Product p) async {
+  void _notificarConDeshacer(Product p) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Row(
+        children: [
+          const Icon(Icons.delete_outline, color: Colors.white, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text("'${p.name}' eliminado",
+                style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+      backgroundColor: Colors.redAccent,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      duration: const Duration(seconds: 3),
+    ),
+  );
+}
+
+  Future<void> _confirmarBorrado(Product p) async {  //funcion mejorada con AlertDialog personalizado semana 3 XG
     final confirmar = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF121212),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Eliminar producto',
-            style: TextStyle(color: Colors.white)),
-        content: Text(
-          "¿Quitar '${p.name}' del inventario?\nEsta acción no se puede deshacer.",
-          style: const TextStyle(color: Colors.grey),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        icon: const Icon(Icons.delete_forever_rounded,
+            color: Colors.redAccent, size: 48),
+        title: const Text(
+          '¿Eliminar producto?',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+          textAlign: TextAlign.center,
         ),
+        content: Text(
+          "'${p.name}' será eliminado permanentemente del inventario.",
+          style: const TextStyle(color: Colors.grey, fontSize: 14),
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
         actions: [
-          TextButton(
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Colors.white24),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('CANCELAR',
                 style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8))),
+              backgroundColor: Colors.redAccent,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('ELIMINAR',
-                style: TextStyle(color: Colors.white)),
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -79,7 +117,7 @@ class _InventarioScreenState extends State<InventarioScreen> {
     if (confirmar == true) {
       await DbHelper.instance.delete(p.id!);
       setState(() {});
-      _notificar("'${p.name}' eliminado", esError: true);
+      _notificarConDeshacer(p);   // ← SnackBar mejorado
     }
   }
 
@@ -104,11 +142,8 @@ class _InventarioScreenState extends State<InventarioScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.grey),
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const SettingsPage()));
+            onPressed: () async {   //Update Semana 3 XG
+              await context.push('/configuracion');
               _cargarPreferencias();
             },
           ),
@@ -126,12 +161,8 @@ class _InventarioScreenState extends State<InventarioScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (_) => const AddProductScreen()),
-          );
+        onPressed: () async {  //Update Semana 3 XG
+          await context.push('/agregar');
           setState(() {});
         },
         backgroundColor: const Color(0xFFE67E22),
