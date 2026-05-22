@@ -148,8 +148,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           decoration: _inputDeco('0', Icons.inventory_2_outlined),
                           validator: (v) {
                             final n = int.tryParse(v ?? '');
-                            if (n == null) return 'Solo números';
-                            if (n < 0) return 'No negativo';
+                            if (n == null) return 'Ingresa un número';
+                            if (n < 0) return 'No puede ser negativo';
                             return null;
                           },
                         ),
@@ -169,8 +169,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           decoration: _inputDeco('0.00', Icons.attach_money),
                           validator: (v) {
                             final n = double.tryParse(v ?? '');
-                            if (n == null) return 'Número válido';
-                            if (n <= 0) return 'Mayor a 0';
+                            if (n == null) return 'Ingresa un precio válido';
+                            if (n <= 0) return 'Debe ser mayor a 0';
                             return null;
                           },
                         ),
